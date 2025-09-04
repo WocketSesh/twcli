@@ -14,43 +14,43 @@ def createGameSkinCommand(): Command =
     ++= (Command("load", "Load skin folder", 0, Seq("l")) += ((args: Seq[String], cmd: Command) => loadSkinFolder(if args.nonEmpty then args.head else Client.getFolder)))
     ++= (Command("exit", "Exit gameskin mode", 0, Seq("e")) += ((args: Seq[String], cmd: Command) => Client.setMode(Normal)))
     ++= (Command("set_folder", "Set skin folder", 0, Seq("sf")) += ((args: Seq[String], cmd: Command) => Client.setFolder(if args.nonEmpty then args.head else "")))
-    ++= (Command("set_asset", "Set asset", 0, Seq("seta")) += ((args: Seq[String], cmd: Command) => setAsset(args)))
-    ++= (Command("save_asset", "Save asset", 0, Seq("savea")) += ((args: Seq[String], cmd: Command) => saveAsset(args)))
-    ++= (Command("list", "List skins", 0, Seq("ls")) += ((args: Seq[String], cmd: Command) => listSkins(args)))
-    ++= (Command("save_gameskin", "Save gameskin", 0, Seq("sg")) += ((args: Seq[String], cmd: Command) => saveGameskin(args)))
-    ++= (Command("set_target", "Set target skin", 0, Seq("st")) += ((args: Seq[String], cmd: Command) => setTarget(args, cmd)))
-    ++= (Command("set_primary", "Set primary skin", 0, Seq("sp")) += ((args: Seq[String], cmd: Command) => setPrimary(args, cmd)))
-    ++= (Command("set_guns", "Set guns", 0, Seq("setg")) += ((args: Seq[String], cmd: Command) => setGuns(args)))
-    ++= (Command("set_particles", "Set particles", 0, Seq("setp")) += ((args: Seq[String], cmd: Command) => setParticles(args)))
-    ++= (Command("set_cursors", "Set cursors", 0, Seq("setc")) += ((args: Seq[String], cmd: Command) => setCursors(args)))
-    ++= (Command("set_assets", "Sets multiple assets", 0, Seq("setas")) += ((args: Seq[String], cmd: Command) => setLotsAssets(args)))
+    ++= (Command("set_asset", "Set asset", 0, Seq("seta")) += setAsset)
+    ++= (Command("save_asset", "Save asset", 0, Seq("savea")) += saveAsset)
+    ++= (Command("list", "List skins", 0, Seq("ls")) += listSkins)
+    ++= (Command("save_gameskin", "Save gameskin", 0, Seq("sg")) += saveGameskin)
+    ++= (Command("set_target", "Set target skin", 0, Seq("st")) += setTarget)
+    ++= (Command("set_primary", "Set primary skin", 0, Seq("sp")) += setPrimary)
+    ++= (Command("set_guns", "Set guns", 0, Seq("setg")) += setGuns)
+    ++= (Command("set_particles", "Set particles", 0, Seq("setp")) += setParticles)
+    ++= (Command("set_cursors", "Set cursors", 0, Seq("setc")) += setCursors)
+    ++= (Command("set_assets", "Sets multiple assets", 0, Seq("setas")) += setLotsAssets)
 
-private def setGuns(args: Seq[String]): Unit =
+private def setGuns(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 2)
 
   if !validArguments then
     println(s"Expected: set_guns <skin> <target>")
     return
 
-  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.Guns.mkString(","), args(1))) else setLotsAssets(args)
+  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.Guns.mkString(","), args(1)), cmd) else setLotsAssets(args, cmd)
 
-private def setParticles(args: Seq[String]): Unit =
+private def setParticles(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 2)
 
   if !validArguments then
     println(s"Expected: set_particles <skin> <target>")
     return
 
-  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.OtherParticles.mkString(","), args(1))) else setLotsAssets(args)
+  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.OtherParticles.mkString(","), args(1)), cmd) else setLotsAssets(args, cmd)
 
-private def setCursors(args: Seq[String]): Unit =
+private def setCursors(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 2)
 
   if !validArguments then
     println(s"Expected: set_cursors <skin> <target>")
     return
 
-  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.Cursors.mkString(","), args(1))) else setLotsAssets(args)
+  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.Cursors.mkString(","), args(1)), cmd) else setLotsAssets(args, cmd)
 
 private def sufficientArguments(args: Seq[String], expectedCount: Int): (Boolean, Boolean) =
   val usingPrimary = Client.getPrimary != ""
@@ -61,7 +61,7 @@ private def sufficientArguments(args: Seq[String], expectedCount: Int): (Boolean
 
   (sufficientArguments, usingPrimary && usingTarget)
 
-private def setLotsAssets(args: Seq[String]): Unit =
+private def setLotsAssets(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 3)
 
 
@@ -79,15 +79,17 @@ private def setLotsAssets(args: Seq[String]): Unit =
   if !GameSkin.exists(targetValue) then
     println(s"Skin $targetValue does not exist")
 
+  val skin = GameSkin.getGameSkin(skinName).get
+  val targetSkin = GameSkin.getGameSkin(targetValue).get
+
   val assetNames = (if usingPrimary then args.head else args(1)).split(',').toList
 
   for assetName <- assetNames
       asset <- GameSkinAsset.getAsset(assetName) do
 
-    val skin = GameSkin.getGameSkin(skinName)
-    val targetSkin = GameSkin.getGameSkin(targetValue)
 
-    skin.get.copyAssetPartFrom(asset, targetSkin.get)
+
+    skin.copyAssetPartFrom(asset, targetSkin)
 
     println(s"Copied $assetName to $skinName from $targetValue")
 
@@ -126,7 +128,7 @@ private def setTarget(args: Seq[String], command: Command): Unit =
   Client.setTarget(skinName)
   println(s"Set target skin to $skinName")
 
-private def setAsset(args: Seq[String]): Unit =
+private def setAsset(args: Seq[String], cmd: Command): Unit =
   val usingPrimary = Client.getPrimary != ""
   val usingTarget = Client.getTarget != ""
 
@@ -168,7 +170,7 @@ private def setAsset(args: Seq[String]): Unit =
   println(s"Copied $assetName to $skinName from $targetValue")
 
 
-private def saveGameskin(args: Seq[String]): Unit =
+private def saveGameskin(args: Seq[String], cmd: Command): Unit =
   val skinName = args.head
   val gameSkin = GameSkin.getGameSkin(skinName)
   if gameSkin.isEmpty then
@@ -178,7 +180,7 @@ private def saveGameskin(args: Seq[String]): Unit =
     println(s"Saved $skinName to ${Client.getFolder}\\$skinName.png")
 
 
-private def saveAsset(args: Seq[String]): Unit =
+private def saveAsset(args: Seq[String], cmd: Command): Unit =
   if args.size < 2 then return
 
   val skinName = args.head
@@ -194,7 +196,7 @@ private def saveAsset(args: Seq[String]): Unit =
     gameSkin.get.saveAssetPart(asset, filePath)
 
 
-private def listSkins(args: Seq[String]): Unit =
+private def listSkins(args: Seq[String], cmd: Command): Unit =
   if args.isEmpty then
     println("Expected: list <skins | assets>")
     return

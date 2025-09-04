@@ -21,7 +21,6 @@ object ClientModes:
       case _ => Invalid
 
 
-
 object Client:
   private var mode = ClientModes.Normal
   private var saveFolder = ""
@@ -31,29 +30,28 @@ object Client:
   def run(): Unit =
     readInput()
 
+  def getFolder: String =
+    saveFolder
+
   def setFolder(path: String): Unit =
     saveFolder = path
     println(s"Target Folder Set To: $path")
 
-  def getFolder: String =
-    saveFolder
-
-  def setPrimary(skin: String): Unit =
-    primarySkin = skin
+  def getTarget: String = targetSkin
 
   def setTarget(skin: String): Unit =
     targetSkin = skin
 
-  def getTarget: String = targetSkin
-
   def getPrimary: String = primarySkin
+
+  def setPrimary(skin: String): Unit =
+    primarySkin = skin
 
   def setMode(mode: ClientModes): Unit =
     this.mode = mode
 
   def setMode(mode: String): Unit =
     this.mode = ClientModes.fromString(mode)
-
 
 
   @tailrec

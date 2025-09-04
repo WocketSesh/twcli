@@ -1,5 +1,5 @@
 import client.{Client, Command, CommandHandler}
-import commands.{createModeCommand, createGameSkinCommand}
+import commands.{createGameSkinCommand, createModeCommand}
 import gameskin.{GameSkin, GameSkinAsset}
 
 @main def main(): Unit = {

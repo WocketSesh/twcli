@@ -13,12 +13,6 @@ object CommandHandler:
         commands += command
         printf("Registered command '%s'\n", command.name)
 
-
-  def get(name: String): Option[Command] =
-    commands.find(x => x.name == name || (x.aliases contains name)) match
-      case Some(command) => Some(command)
-      case None => None
-
   def tryRun(args: Seq[String]): Unit =
     args match
       case cmd +: args =>
@@ -28,3 +22,8 @@ object CommandHandler:
           else
             command.trigger(args)
       case _ =>
+
+  def get(name: String): Option[Command] =
+    commands.find(x => x.name == name || (x.aliases contains name)) match
+      case Some(command) => Some(command)
+      case None => None

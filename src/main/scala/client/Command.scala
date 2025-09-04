@@ -11,12 +11,12 @@ class Command(val name: String, val description: String, val expectedArgs: Int, 
     onRun = f
     this
 
-  def ++=(command: Command): Command =
-    subCommands += command
-    this
-
   def ++=(commands: List[Command]): Command =
     commands.foreach(++=)
+    this
+
+  def ++=(command: Command): Command =
+    subCommands += command
     this
 
   def printHelp(indentation: Int = 0): Unit =
