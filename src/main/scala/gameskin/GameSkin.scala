@@ -77,8 +77,15 @@ enum GameSkinAsset(val x: Int, val y: Int, val width: Int, val height: Int):
 object GameSkin:
   private val gameSkins: collection.mutable.Map[String, GameSkin] = collection.mutable.Map()
 
-  def createGameSkin(name: String, base: GameSkin): GameSkin =
-    GameSkin(base.file, name)
+  def createGameSkin(name: String, base: GameSkin): Unit =
+    val path = base.file.getAbsolutePath.replace(base.name, name)
+    val file = File(path)
+    ImageIO.write(
+      base.bufferedImg,
+      "png",
+      file)
+
+    loadGameSkin(path)
 
   def getGameSkin(name: String): Option[GameSkin] =
     if gameSkins.contains(name) then
@@ -105,6 +112,7 @@ object GameSkin:
     println(s"Loaded GameSkin $name")
 
     gameSkins += (name -> gs)
+
 
   case class GameSkinPart(part: GameSkinAsset, original: String, bufferedImage: BufferedImage):
     val pixels: Array[Int] = bufferedImage.getRGB(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null, 0, bufferedImage.getWidth())

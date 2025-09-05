@@ -24,6 +24,24 @@ def createGameSkinCommand(): Command =
     ++= (Command("set_particles", "Set particles", 0, Seq("setp")) += setParticles)
     ++= (Command("set_cursors", "Set cursors", 0, Seq("setc")) += setCursors)
     ++= (Command("set_assets", "Sets multiple assets", 0, Seq("setas")) += setLotsAssets)
+    ++= (Command("create", "Create gameskin", 0, Seq("c")) += createGameSkin)
+
+
+private def createGameSkin(args: Seq[String], cmd: Command): Unit =
+  if args.length < 2 then
+    println("Expected: create <name> <base>")
+    return
+
+  val name = args.head
+  val base = args(1)
+  val baseSkin = GameSkin.getGameSkin(base)
+
+  if baseSkin.isEmpty then
+    println(s"Base skin $base does not exist")
+    return
+
+  GameSkin.createGameSkin(name, baseSkin.get)
+  println(s"Created $name from $base")
 
 private def setGuns(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 2)
@@ -32,7 +50,10 @@ private def setGuns(args: Seq[String], cmd: Command): Unit =
     println(s"Expected: set_guns <skin> <target>")
     return
 
-  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.Guns.mkString(","), args(1)), cmd) else setLotsAssets(args, cmd)
+  setLotsAssets(
+    if usingPrimary then Seq(GameSkinAsset.Guns.mkString(","))
+    else Seq(args.head, GameSkinAsset.Guns.mkString(","), args(1)),
+    cmd)
 
 private def setParticles(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 2)
@@ -41,7 +62,10 @@ private def setParticles(args: Seq[String], cmd: Command): Unit =
     println(s"Expected: set_particles <skin> <target>")
     return
 
-  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.OtherParticles.mkString(","), args(1)), cmd) else setLotsAssets(args, cmd)
+  setLotsAssets(
+    if usingPrimary then Seq(GameSkinAsset.OtherParticles.mkString(","))
+    else Seq(args.head, GameSkinAsset.OtherParticles.mkString(","), args(1)),
+    cmd)
 
 private def setCursors(args: Seq[String], cmd: Command): Unit =
   val (validArguments, usingPrimary) = sufficientArguments(args, 2)
@@ -50,13 +74,17 @@ private def setCursors(args: Seq[String], cmd: Command): Unit =
     println(s"Expected: set_cursors <skin> <target>")
     return
 
-  if !usingPrimary then setLotsAssets(Seq(args.head, GameSkinAsset.Cursors.mkString(","), args(1)), cmd) else setLotsAssets(args, cmd)
+  setLotsAssets(
+    if usingPrimary then Seq(GameSkinAsset.Cursors.mkString(","))
+    else Seq(args.head, GameSkinAsset.Cursors.mkString(","), args(1)),
+    cmd)
 
 private def sufficientArguments(args: Seq[String], expectedCount: Int): (Boolean, Boolean) =
   val usingPrimary = Client.getPrimary != ""
   val usingTarget = Client.getTarget != ""
+
   val sufficientArguments =
-    (args.nonEmpty && usingPrimary && usingTarget)
+    (args.size >= expectedCount - 2 && usingPrimary && usingTarget)
       || args.size >= expectedCount
 
   (sufficientArguments, usingPrimary && usingTarget)
